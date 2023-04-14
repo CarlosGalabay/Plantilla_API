@@ -7,69 +7,58 @@ using System.Net;
 
 namespace proyecto.API.Middleware
 {
-    public class ExceptionMiddleware : IMiddleware
+    public class ExceptionMiddleware
     {
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionMiddleware> _logger;
+
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        {
+            _next = next;
+            _logger = logger;
+        }
+
+        public async Task InvokeAsync(HttpContext httpContext)
         {
             try
             {
-                await next(context);
+                await _next(httpContext);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                string errorId = Guid.NewGuid().ToString();
-                LogContext.PushProperty("ErrorId", errorId);
-                LogContext.PushProperty("StackTrace", exception.StackTrace);
-                var errorResult = new ErrorResult
-                {
-                    Source = exception.TargetSite?.DeclaringType?.FullName,
-                    Exception = exception.Message.Trim(),
-                    ErrorId = errorId,
-                    SupportMessage = $"Provide the Error Id: {errorId} to the support team for further analysis."
-                };
-                errorResult.Messages.Add(exception.Message);
-
-                if (exception is not CustomException && exception.InnerException != null)
-                {
-                    while (exception.InnerException != null)
-                    {
-                        exception = exception.InnerException;
-                    }
-                }
-
-                switch (exception)
-                {
-                    case CustomException e:
-                        errorResult.StatusCode = (int)e.StatusCode;
-                        if (e.ErrorMessages is not null)
-                        {
-                            errorResult.Messages = e.ErrorMessages;
-                        }
-
-                        break;
-
-                    case KeyNotFoundException:
-                        errorResult.StatusCode = (int)HttpStatusCode.NotFound;
-                        break;
-
-                    default:
-                        errorResult.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        break;
-                }
-
-                Log.Error($"{errorResult.Exception} Request failed with Status Code {context.Response.StatusCode} and Error Id {errorId}.");
-                var response = context.Response;
-                if (!response.HasStarted)
-                {
-                    response.ContentType = "application/json";
-                    response.StatusCode = errorResult.StatusCode;
-                    await response.WriteAsync(JsonConvert.SerializeObject(errorResult));
-                }
-                else
-                {
-                    Log.Warning("Can't write error response. Response has already started.");
-                }
+                await HandleExceptionAsync(httpContext, ex);
             }
+        }
+
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+            context.Response.ContentType = "application/json";
+            var response = context.Response;
+
+            var errorResponse = new ErrorResponse
+            {
+                Success = false
+            };
+            switch (exception)
+            {
+                case NotFoundException ex:
+                    if (ex.Message.Contains("Pilas no existe ese ID.\nPD: No soy de Computación xd"))
+                    {
+                        response.StatusCode = (int)HttpStatusCode.Forbidden;
+                        errorResponse.Message = ex.Message;
+                        break;
+                    }
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    errorResponse.Message = ex.Message;
+                    break;
+                default:
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    errorResponse.Message = "Internal server error. En Español paso algo que no esperabamos en la porgramación!";
+                    break;
+            }
+            _logger.LogError(exception.Message);
+            var result = System.Text.Json.JsonSerializer.Serialize(errorResponse);
+            await context.Response.WriteAsync(result);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using proyecto.API.Entities.Productos;
+using proyecto.API.Middleware.Exceptions;
 using proyecto.API.Services;
 using proyecto.API.Services.Interfaces;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -33,8 +34,8 @@ namespace proyecto.API.Controllers
             var producto = await _productoService.GetProductoByIdAsync(id);
             if (producto != null)
                 return Ok(producto);
-            return NotFound("Producto no encontrado.");
-            
+            throw new NotFoundException("Pilas no existe ese ID.\nPD: No soy de Computación xd");
+
         }
 
         [HttpGet("filtro_nombre"), Authorize(Roles = "administrador,empleado")]

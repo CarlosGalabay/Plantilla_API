@@ -23,7 +23,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddDbContext<NombreDbContext>(options =>
     options.UseNpgsql(connectionString)
     );
-// Config JWT
+// Inyeccion de servicios
 builder.Services.AddScoped<IProductoService, ProductoService>();
 
 builder.Services.AddCors(options =>
@@ -84,7 +84,8 @@ var app = builder.Build();
 
 //Excepciones globales
 
-//app.UseGlobalExceptionHandler();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -93,11 +94,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 
 app.Run();
