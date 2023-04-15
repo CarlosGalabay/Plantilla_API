@@ -94,7 +94,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseGlobalExceptionHandler();
 
 app.UseCors();
 app.UseHttpsRedirection();

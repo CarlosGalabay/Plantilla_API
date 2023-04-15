@@ -42,7 +42,7 @@ namespace proyecto.API.Middleware
             switch (exception)
             {
                 case NotFoundException ex:
-                    if (ex.Message.Contains("Pilas no existe ese ID.\nPD: No soy de Computación xd"))
+                    if (ex.Message.Contains("Pilas no existe ese ID. PD: No soy de Computación xd"))
                     {
                         response.StatusCode = (int)HttpStatusCode.Forbidden;
                         errorResponse.Message = ex.Message;
@@ -53,7 +53,7 @@ namespace proyecto.API.Middleware
                     break;
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    errorResponse.Message = "Internal server error. En Español paso algo que no esperabamos en la porgramación!";
+                    errorResponse.Message = "Internal server error. En Español paso algo que no esperabamos en la programación!";
                     break;
             }
             _logger.LogError(exception.Message);

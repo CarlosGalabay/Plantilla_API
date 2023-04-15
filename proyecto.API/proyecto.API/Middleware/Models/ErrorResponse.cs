@@ -1,4 +1,4 @@
-﻿namespace proyecto.API.Middleware
+﻿namespace proyecto.API.Middleware.Models
 {
     internal class ErrorResponse
     {

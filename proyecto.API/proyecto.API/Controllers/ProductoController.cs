@@ -48,7 +48,7 @@ namespace proyecto.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Producto producto)
+        public async Task<ActionResult<Producto>> Post(Producto producto)
         {
             producto.Activo = true;
             _productoService.Add(producto);
@@ -80,6 +80,7 @@ namespace proyecto.API.Controllers
             return Ok(productoToUpdate);
 
         }
+
 
     }
 }
